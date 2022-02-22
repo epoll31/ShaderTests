@@ -1,8 +1,17 @@
 #pragma once
+#ifndef _IOSTREAM_
 #include <iostream>
+#endif
+#ifndef _FSTREAM_
 #include <fstream>
+#endif
+#ifndef _STRING_
 #include <string>
+#endif
+
+#ifndef __glad_h_
 #include <glad/glad.h>
+#endif
 
 class Shader
 {

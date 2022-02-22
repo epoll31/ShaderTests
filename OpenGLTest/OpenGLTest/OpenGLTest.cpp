@@ -1,13 +1,19 @@
-#include <iostream>
-#include <string>
 
+#ifndef _IOSTREAM_
+#include <iostream>
+#endif
+#ifndef _STRING_
+#include <string>
+#endif
+
+#ifndef _glfw3_h_
 #include <GLFW/glfw3.h>
+#endif
+#ifndef __glad_h_
 #include <glad/glad.h>
+#endif
 
 #include "Shader.h"
-#include "OpenGLTest.h"
-
-#include "gif.h"
 
 #define CreateGif 0
 
@@ -36,7 +42,7 @@ void processInput(GLFWwindow* window)
     lastWPress = wPress;
 }
 
-void populateCircles(const int circles, GLfloat *points, float *infos, float width, float height) {
+void populateCircles(const int circles, GLfloat *points, GLfloat *infos, int width, int height) {
     for (int i = 0; i < circles; i++) {
         int pxi = i * 3;    //index of x
         int pyi = pxi + 1;  //index of y
@@ -45,20 +51,23 @@ void populateCircles(const int circles, GLfloat *points, float *infos, float wid
         int di = i * 2;     //index of direction
         int si = di + 1;    //index of speed
 
-        points[pri] = (std::rand() % 15) + 10;
-        points[pxi] = width / 2;// (std::rand() % (int)(width - 4 * points[pri])) + 2 * points[pri];
-        points[pyi] = height / 2;// (std::rand() % (int)(height - 4 * points[pri])) + 2 * points[pri];
-        infos[di] = (std::rand() % 1000) / 1000.0F * acos(0) * 2;
-        infos[si] = (std::rand() % 50) + 10;
+        points[pri] = (GLfloat)((std::rand() % 15) + 10);
+        points[pxi] = (GLfloat)(width / 2);// (std::rand() % (int)(width - 4 * points[pri])) + 2 * points[pri];
+        points[pyi] = (GLfloat)(height / 2);// (std::rand() % (int)(height - 4 * points[pri])) + 2 * points[pri];
+        infos[di] = (GLfloat)((std::rand() % 1000) / 1000.0F * acos(0) * 2);
+        infos[si] = (GLfloat)((std::rand() % 50) + 10);
     }
 }
 
 GLfloat* createColorArray(const int count, uint32_t* input) {
     GLfloat *output = (GLfloat*)malloc(sizeof(GLfloat) * count * 3);
+    if (output == NULL) {
+        return NULL;
+    }
     for (int i = 0; i < count; i++) {
-        output[i * 3 + 0] = ((input[i] & 0xff0000) >> 16) / 255.0f;
-        output[i * 3 + 1] = ((input[i] & 0x00ff00) >>  8) / 255.0f;
-        output[i * 3 + 2] = ((input[i] & 0x0000ff) >>  0) / 255.0f;
+        output[i * 3 + 0] = (GLfloat)(((input[i] & 0xff0000) >> 16) / 255.0f);
+        output[i * 3 + 1] = (GLfloat)(((input[i] & 0x00ff00) >>  8) / 255.0f);
+        output[i * 3 + 2] = (GLfloat)(((input[i] & 0x0000ff) >>  0) / 255.0f);
     }
     return output;
 }
@@ -126,7 +135,7 @@ int main()
     
     const int circles = 10;
     GLfloat points[circles * 3];
-    float infos[circles * 2];
+    GLfloat infos[circles * 2];
     populateCircles(circles, points, infos, width, height);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -166,7 +175,7 @@ int main()
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//default to fill
 
-    float prev = 0;
+    double prev = 0;
 #if CreateGif
     int imgNum = 0;
     std::string path = "C:\\Users\\epoll\\Documents\\Visual Studio 2022\\Projects\\OpenGLTest\\Images\\";
@@ -183,8 +192,8 @@ int main()
     {
         glfwGetWindowSize(window, &width, &height);
 
-        float time = glfwGetTime();
-        float elapsed = time - prev;
+        double time = glfwGetTime();
+        double elapsed = time - prev;
 
         processInput(window);
 
@@ -196,16 +205,16 @@ int main()
             int di = i * 2;     //index of direction
             int si = di + 1;    //index of speed
 
-            points[pxi] += infos[si] * (float)cos(infos[di]) * elapsed;
-            points[pyi] += infos[si] * (float)sin(infos[di]) * elapsed;
+            points[pxi] += infos[si] * (float)cos(infos[di]) * (float)elapsed;
+            points[pyi] += infos[si] * (float)sin(infos[di]) * (float)elapsed;
 
             if (points[pxi] - points[pri] < 0 || points[pxi] + points[pri] > width) {
                 infos[di] = 2 * acos(0) - infos[di];
-                points[pxi] += infos[si] * (float)cos(infos[di]) * elapsed;
+                points[pxi] += infos[si] * (float)cos(infos[di]) * (float)elapsed;
             }
             if (points[pyi] - points[pri] < 0 || points[pyi] + points[pri] > height) {
                 infos[di] *= -1;
-                points[pyi] += infos[si] * (float)sin(infos[di]) * elapsed;
+                points[pyi] += infos[si] * (float)sin(infos[di]) * (float)elapsed;
             }
         }
 

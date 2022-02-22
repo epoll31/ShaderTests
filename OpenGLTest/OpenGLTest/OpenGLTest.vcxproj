@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="OpenGLTest.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="basicFragmentShader.glsl" />
@@ -153,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="gif.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
