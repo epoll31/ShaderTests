@@ -1,33 +1,20 @@
 #include "Window.h"
 
-/*void framebuffer_size_callback_func(GLFWwindow* window, int width, int height) {
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
-}*/
-
-
-Window::Window(int width, int height, GLfloat *vertices, uint32_t *indices) {
-	this->width = width;
-	this->height = height;
-	this->title = "Window";
-	this->vertices = vertices;
-	this->indices = indices;
-
-	this->timer = 0;
-	this->prev = 0;
-	this->elapsed = 0;
-
-	this->VBO = 0;
-	this->VAO = 0;
-	this->EBO = 0;
-
-	this->window = NULL;
+	Window* user = (Window*)glfwGetWindowUserPointer(window);
+	user->UpdateBounds();
 }
-Window::Window(int width, int height, const char *title, GLfloat* vertices, uint32_t* indices) {
+
+Window::Window(int width, int height, const char *title, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount) {
 	this->width = width;
 	this->height = height;
 	this->title = title;
 	this->vertices = vertices;
+	this->vertexCount = vertexCount;
 	this->indices = indices;
+	this->indexCount = indexCount;
 
 	this->timer = 0;
 	this->prev = 0;
@@ -38,17 +25,21 @@ Window::Window(int width, int height, const char *title, GLfloat* vertices, uint
 	this->EBO = 0;
 
 	this->window = NULL;
-}
 
-int Window::GetWidth()
-{
-	glfwGetWindowSize(this->window, &width, &height);
+	this->wf_status = 1;
+
+	this->initialize();
+}
+Window::Window(int width, int height, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount) 
+	: Window(width, height, "Window", vertices, vertexCount, indices, indexCount) { }
+
+void Window::UpdateBounds() {
+	glfwGetWindowSize(window, &this->width, &this->height);
+}
+int Window::GetWidth() {
 	return this->width;
 }
-
-int Window::GetHeight()
-{ 
-	glfwGetWindowSize(this->window, &width, &height);
+int Window::GetHeight() { 
 	return this->height;
 }
 
@@ -57,33 +48,63 @@ bool Window::Update()
 	this->timer = glfwGetTime();
 	this->elapsed = this->timer - this->prev;
 	this->prev = this->timer;
-	return !glfwWindowShouldClose(this->window);
-}
 
+	kp_process_inputs();
+
+	if (glfwWindowShouldClose(this->window)) {
+		return false;
+	}
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	if (!this->shader) {
+		this->shader->Use();
+	}
+
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	glfwSwapBuffers(window);
+	glfwPollEvents();
+
+	return true;
+}
+void Window::Close()
+{
+	glfwTerminate();
+}
 double Window::GetTotalTime()
 {
 	return this->timer;
 }
-
 double Window::GetElapsedTime()
 {
 	return this->elapsed;
 }
 
-void Window::SetWireframe(uint8_t wf_status)
+void Window::FlipWireframe()
 {
-	if ((wf_status >> 0) & 1 && !((this->wf_status >> 0) & 1)) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // default to fill
+	this->wf_status = !this->wf_status;
+	if (this->wf_status) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-	if ((wf_status >> 0) & 1 && !((this->wf_status >> 0) & 1)) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // default to fill
+	else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
-	this->wf_status = wf_status;
+}
+void Window::AttachShader(Shader* shader)
+{
+	this->shader = shader;
 }
 
-void Window::AttachKey(int key_code, void(*keyDown)(int))
+void Window::AttachKey(int key_code, KeyDownFunc key_down)
 {
-
+	this->kp_funcs[key_code] = key_down;
+}
+void Window::RemoveKey(int key_code) {
+	this->kp_funcs[key_code] = NULL;
 }
 
 void Window::initialize() {
@@ -94,12 +115,13 @@ void Window::initialize() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//creating window
-	window = glfwCreateWindow(this->width, this->height, this->title, NULL, NULL);
-	if (window == NULL) {
+	this->window = glfwCreateWindow(this->width, this->height, this->title, NULL, NULL);
+	if (this->window == NULL) {
 		//window creation failed
 		glfwTerminate();
 		throw -1;
 	}
+	glfwSetWindowUserPointer(this->window, this);
 
 	//set window to active
 	glfwMakeContextCurrent(window);
@@ -112,33 +134,44 @@ void Window::initialize() {
 	}
 
 	//this handles resizing the window
-	//glfwSetFramebufferSizeCallback(window, framebuffer_size_callback_func);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//creates the viewport
 	glViewport(0, 0, this->width, this->height);
 
-	glGenBuffers(1, &VBO);
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &this->VBO);
+	glGenVertexArrays(1, &this->VAO);
+	glGenBuffers(1, &this->EBO);
 
-	glBindVertexArray(VAO);
+	glBindVertexArray(this->VAO);
 	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(this->vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferData(GL_ARRAY_BUFFER, this->vertexCount * sizeof(GLfloat) * 6, this->vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(this->indices), indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indexCount * sizeof(GLfloat), this->indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat))); 
+	glEnableVertexAttribArray(1);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // default to fill
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wireframe
+	
 }
-
-void Window::processInput()
+void Window::kp_process_inputs()
 {
-	if (glfwGetKey(this->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		glfwSetWindowShouldClose(this->window, true);
+	for (int i = 0; i < UINT8_MAX; i++) {
+		if (this->kp_funcs[i] == NULL) {
+			continue;
+		}
+		bool prev = this->kp_prev_state[i];
+		bool curr = glfwGetKey(this->window, i);
+		
+		if (curr && !prev) {
+			this->kp_funcs[i](this);
+		}
+
+		this->kp_prev_state[i] = curr;
 	}
 }

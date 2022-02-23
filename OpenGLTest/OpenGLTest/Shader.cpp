@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-const char * Shader::ReadFile(const char *fileName) {
+const char* Shader::ReadFile(const char *fileName) {
     std::ifstream inFile;
     inFile.open(fileName);
     if (!inFile) {
@@ -22,20 +22,20 @@ const char * Shader::ReadFile(const char *fileName) {
 }
 
 unsigned int Shader::CompileShader(const char* shaderSource, GLenum shaderType) {
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(shaderType);
-    glShaderSource(vertexShader, 1, &shaderSource, NULL);
-    glCompileShader(vertexShader);
+    unsigned int shader;
+    shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, &shaderSource, NULL);
+    glCompileShader(shader);
 
     int success;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::COMPILATION_FAILED" << std::endl << infoLog << std::endl;
         exit(-1);
     }
-    return vertexShader;
+    return shader;
 }
 
 Shader::Shader(const char* vertexFileName, const char* fragmentFileName)

@@ -1,4 +1,7 @@
 #pragma once
+#ifndef _SHADER_H_
+#define _SHADER_H_
+
 #ifndef _IOSTREAM_
 #include <iostream>
 #endif
@@ -33,3 +36,4 @@ private:
 	unsigned int CompileShader(const char* shaderSource, GLenum shaderType);
 };
 
+#endif // _SHADER_H_

@@ -9,17 +9,23 @@
 #endif
 
 #ifndef gif_h
-#include "gif.h"
+//#include "gif.h"
 #endif
 
-#define WF_WIRE 2
-#define WF_FILL 1
+#ifndef _SHADER_H_
+#include "Shader.h"
+#endif
 
 class Window
 {
+	typedef void (*KeyDownFuncArray[UINT8_MAX])(Window*);
+	typedef void (*KeyDownFunc)(Window*);
+	typedef bool KeyDownStateArray[UINT8_MAX];
+
 private:
 	int width = 0;
 	int height = 0;
+
 	const char* title;
 
 	double timer = 0;
@@ -30,30 +36,42 @@ private:
 	uint32_t VAO = 0; // Vertex Array Object
 	uint32_t EBO = 0; // Element Buffer Object
 
-	GLfloat *vertices = NULL;
-	uint32_t *indices = NULL;
+	GLfloat* vertices = NULL;	uint32_t vertexCount = 0;
+	uint32_t *indices = NULL;	uint32_t indexCount = 0;
 	GLFWwindow* window = NULL;
 
-	uint8_t wf_status = 1;
-	//key code count
-	uint8_t *kc_codes = NULL;
-	void (*keyFuncs)(int) = NULL;
+	bool wf_status = 0;
+
+	KeyDownFuncArray kp_funcs;//array of size 255
+	KeyDownStateArray kp_prev_state;//array of bits size 255
 	
+	Shader *shader;
+
 	void initialize();
-	void processInput();
+	void kp_process_inputs();
 
 public:
-	Window(int width, int height, GLfloat* vertices, uint32_t* indices);
-	Window(int width, int height, const char* title, GLfloat* vertices, uint32_t* indices);
+	Window(int width, int height, const char* title, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount);
+	Window(int width, int height, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount);
 
+	void UpdateBounds();
 	int GetWidth();
 	int GetHeight();
 
 	bool Update();
+	void Close();
+
 	double GetTotalTime();
 	double GetElapsedTime();
 
-	void SetWireframe(uint8_t wfStatus);
-	void AttachKey(int key_code, void (*keyDown)(int));
-};
+	void FlipWireframe();
+	void AttachShader(Shader* shader);
 
+	/// <summary>
+	/// Will override current key_down func if already attached
+	/// </summary>
+	/// <param name="key_code"> Key Code range: [0-255] </param>
+	/// <param name="keyDown">Function Pointer to void(Window*)</param>
+	void AttachKey(int key_code, KeyDownFunc key_down);
+	void RemoveKey(int key_code);
+};

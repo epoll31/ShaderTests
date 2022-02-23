@@ -11,11 +11,7 @@ uniform vec3[numCircles] pointArray;
 
 uniform float size;
 uniform vec3[numColors] colors;
-/*
-void rand(in vec2 co, out float result){
-    result = fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
-}
-*/
+
 void drawCircles() {
 	for (int i = 0; i < numCircles; i++) {
 		float dist = distance(gl_FragCoord.xy, pointArray[i].xy);
@@ -66,5 +62,5 @@ vec3 splitGroups2(float charge) {
 
 void main() {
 	float charge = calculateCharge(true);
-	FragColor = vec4(splitGroups2(charge), 1.0);
+	FragColor = mix(vertexColor, vec4(splitGroups2(charge), 1.0), 0.5);
 }
