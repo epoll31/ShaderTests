@@ -7,13 +7,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	user->UpdateBounds();
 }
 
-Window::Window(int width, int height, const char *title, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount) {
+Window::Window(int width, int height, const char *title, GLfloat *vertices, size_t vertexCount, uint32_t *indices, size_t indexCount) {
 	this->width = width;
 	this->height = height;
 	this->title = title;
 	this->vertices = vertices;
-	this->vertexCount = vertexCount;
 	this->indices = indices;
+	this->vertexCount = vertexCount;
 	this->indexCount = indexCount;
 
 	this->timer = 0;
@@ -28,9 +28,13 @@ Window::Window(int width, int height, const char *title, GLfloat* vertices, uint
 
 	this->wf_status = 1;
 
+	this->sa_count = 0;
+	this->sa_length = 0;
+	this->sa_shaders = NULL;
+
 	this->initialize();
 }
-Window::Window(int width, int height, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount) 
+Window::Window(int width, int height, GLfloat* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount)
 	: Window(width, height, "Window", vertices, vertexCount, indices, indexCount) { }
 
 void Window::UpdateBounds() {
@@ -58,8 +62,8 @@ bool Window::Update()
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	if (!this->shader) {
-		this->shader->Use();
+	for (int i = 0; i < this->sa_count; i++) {
+		this->sa_shaders[i].Use();
 	}
 
 	glBindVertexArray(VAO);
@@ -94,9 +98,28 @@ void Window::FlipWireframe()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 }
-void Window::AttachShader(Shader* shader)
-{
-	this->shader = shader;
+
+void Window::AttachShader(Shader* shader) {
+	if (this->sa_count == this->sa_length) {
+		Shader* shaders = (Shader*)malloc(sizeof(Shader) * (++this->sa_length));
+		for (int i = 0; i < this->sa_count; i++) {
+			shaders[i] = this->sa_shaders[i];
+		}
+		free(this->sa_shaders);
+		this->sa_shaders = shaders;
+	}
+	this->sa_shaders[this->sa_count++] = *shader;
+}
+bool Window::DetachShader(Shader* shader) {
+	for (int i = 0; i < this->sa_count; i++) {
+		if (this->sa_shaders + sizeof(Shader) * i == shader) {
+			this->sa_shaders[i] = this->sa_shaders[this->sa_count - 1];
+			free(this->sa_shaders + sizeof(Shader) * (this->sa_count - 1));
+			this->sa_count--;
+			return true;
+		}
+	}
+	return false;
 }
 
 void Window::AttachKey(int key_code, KeyDownFunc key_down)

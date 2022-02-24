@@ -19,14 +19,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="OpenGLTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Window.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Shader Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -34,6 +34,13 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="basicFragmentShader.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include=".editorconfig" />
+    <None Include="vertexShader.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="fragmentShader.glsl">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

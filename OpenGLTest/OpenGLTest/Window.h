@@ -36,8 +36,8 @@ private:
 	uint32_t VAO = 0; // Vertex Array Object
 	uint32_t EBO = 0; // Element Buffer Object
 
-	GLfloat* vertices = NULL;	uint32_t vertexCount = 0;
-	uint32_t *indices = NULL;	uint32_t indexCount = 0;
+	GLfloat *vertices = NULL;	size_t vertexCount = 0;
+	uint32_t *indices = NULL;	size_t indexCount = 0;
 	GLFWwindow* window = NULL;
 
 	bool wf_status = 0;
@@ -45,14 +45,16 @@ private:
 	KeyDownFuncArray kp_funcs;//array of size 255
 	KeyDownStateArray kp_prev_state;//array of bits size 255
 	
-	Shader *shader;
+	uint8_t sa_count;
+	uint8_t sa_length;
+	Shader *sa_shaders;
 
 	void initialize();
 	void kp_process_inputs();
 
 public:
-	Window(int width, int height, const char* title, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount);
-	Window(int width, int height, GLfloat* vertices, uint32_t vertexCount, uint32_t* indices, uint32_t indexCount);
+	Window(int width, int height, const char* title, GLfloat* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
+	Window(int width, int height, GLfloat* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
 
 	void UpdateBounds();
 	int GetWidth();
@@ -66,6 +68,7 @@ public:
 
 	void FlipWireframe();
 	void AttachShader(Shader* shader);
+	bool DetachShader(Shader* shader);
 
 	/// <summary>
 	/// Will override current key_down func if already attached
